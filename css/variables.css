@@ -1,0 +1,24 @@
+:root {
+  --bg-app: #0b0e14;
+  --bg-card: #151921;
+  --bg-card-hover: #1a2030;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --text-primary: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --accent-purple: #8b5cf6;
+  --accent-purple-hover: #7c3aed;
+  --accent-cyan: #22d3ee;
+  --accent-cyan-dim: rgba(34, 211, 238, 0.35);
+  --accent-green: #10b981;
+  --accent-blue: #3b82f6;
+  --accent-gold: #fbbf24;
+  --accent-red: #ef4444;
+  --accent-red-dim: rgba(239, 68, 68, 0.15);
+  --grid-line: rgba(59, 130, 246, 0.08);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font: 'Inter', system-ui, sans-serif;
+  --target-radius: 18;
+  --game-duration: 30;
+}
