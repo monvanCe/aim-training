@@ -5,10 +5,46 @@ import { CanvasRenderer } from './features/rendering/CanvasRenderer.js';
 import { StatsManager } from './features/stats/StatsManager.js';
 import { AchievementService } from './features/achievements/AchievementService.js';
 import { UIController } from './features/ui/UIController.js';
+import { PlayerIdentityService } from './features/leaderboard/PlayerIdentityService.js';
+import { LeaderboardService } from './features/leaderboard/LeaderboardService.js';
+import { LeaderboardView } from './features/ui/LeaderboardView.js';
 
 const bus = new EventBus();
 const statsManager = new StatsManager();
 const achievementService = new AchievementService();
+const playerIdentity = new PlayerIdentityService();
+const leaderboardService = new LeaderboardService();
+
+const leaderboardView = new LeaderboardView(
+  {
+    btnLeaderboard: document.getElementById('btn-leaderboard'),
+    modalLeaderboard: document.getElementById('modal-leaderboard'),
+    leaderboardList: document.getElementById('leaderboard-list'),
+    leaderboardStatus: document.getElementById('leaderboard-status'),
+    leaderboardYou: document.getElementById('leaderboard-you'),
+    btnCloseLeaderboard: document.getElementById('btn-close-leaderboard'),
+    modalUsername: document.getElementById('modal-username'),
+    usernameInput: document.getElementById('username-input'),
+    usernameError: document.getElementById('username-error'),
+    btnSaveUsername: document.getElementById('btn-save-username'),
+    toastWelcome: document.getElementById('toast-welcome'),
+    toastWelcomeText: document.getElementById('toast-welcome-text'),
+  },
+  leaderboardService,
+  playerIdentity
+);
+
+leaderboardView.onRegister(async (username) => {
+  await playerIdentity.register(username);
+});
+
+playerIdentity.init().then(({ profile, isNew }) => {
+  if (isNew) {
+    leaderboardView.showUsernamePrompt();
+  } else if (profile?.username) {
+    leaderboardView.showWelcome(profile.username);
+  }
+});
 
 const canvas = document.getElementById('game-canvas');
 const renderer = new CanvasRenderer(canvas);
@@ -94,6 +130,10 @@ function handleSessionEnd() {
     accuracyStreak90: agg.accuracyStreak90,
     isNewBest,
   });
+
+  if (pb?.hps != null) {
+    playerIdentity.updateBestScore(pb.hps).catch(() => {});
+  }
 
   bus.emit('session:complete', { result, entry });
   ui.showResults(result);

@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- fav icon -->
+  <link rel="icon" type="image/png" href="favicon.png">
   <title>Aim Trainer — Flick Mode</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,6 +13,36 @@
   <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
+  <button type="button" class="btn-leaderboard" id="btn-leaderboard" title="Leaderboard" aria-label="Leaderboard">
+    <span class="btn-leaderboard__icon" aria-hidden="true">🏆</span>
+  </button>
+
+  <div id="toast-welcome" class="toast-welcome" hidden>
+    <span id="toast-welcome-text"></span>
+  </div>
+
+  <div id="modal-username" class="modal-overlay" hidden>
+    <div class="modal card" role="dialog" aria-labelledby="modal-username-title" aria-modal="true">
+      <h2 id="modal-username-title" class="modal__title">Choose a username</h2>
+      <p class="modal__hint">No sign-up — your browser fingerprint links this name to your scores.</p>
+      <input type="text" id="username-input" class="modal__input" maxlength="16" autocomplete="nickname" placeholder="e.g. flick_master" />
+      <p id="username-error" class="modal__error" hidden></p>
+      <button type="button" class="btn-primary modal__action" id="btn-save-username">Save &amp; play</button>
+    </div>
+  </div>
+
+  <div id="modal-leaderboard" class="modal-overlay" hidden>
+    <div class="modal card modal--wide" role="dialog" aria-labelledby="modal-leaderboard-title" aria-modal="true">
+      <div class="modal__header">
+        <h2 id="modal-leaderboard-title" class="modal__title">Global Leaderboard</h2>
+        <button type="button" class="modal__close" id="btn-close-leaderboard" aria-label="Close">&times;</button>
+      </div>
+      <p id="leaderboard-you" class="leaderboard-you"></p>
+      <p id="leaderboard-status" class="leaderboard-status" hidden></p>
+      <div id="leaderboard-list" class="leaderboard-list"></div>
+    </div>
+  </div>
+
   <div class="app">
     <!-- Game View -->
     <section id="game-view" class="view view--active">
