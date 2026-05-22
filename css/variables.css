@@ -21,4 +21,5 @@
   --font: 'Inter', system-ui, sans-serif;
   --target-radius: 18;
   --game-duration: 30;
+  --bottom-panel-height: 360px;
 }

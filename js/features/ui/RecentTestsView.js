@@ -14,13 +14,13 @@ export class RecentTestsView {
    */
   render(tests) {
     if (!tests.length) {
-      this._container.innerHTML = '<p class="empty-state">Henüz test yok</p>';
+      this._container.innerHTML = '<p class="empty-state">No tests yet</p>';
       return;
     }
 
     this._container.innerHTML = tests
       .map((t) => {
-        const time = new Date(t.timestamp).toLocaleTimeString('tr-TR', {
+        const time = new Date(t.timestamp).toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
         });

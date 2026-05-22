@@ -71,17 +71,28 @@ function setupCanvas() {
 
 function handleSessionEnd() {
   const result = engine.getResults();
-  const { entry } = statsManager.saveSession(result);
+  const { entry, isNewBest } = statsManager.saveSession(result);
 
   const pb = statsManager.getPersonalBest();
   const recent = statsManager.getRecentTests();
 
+  const agg = statsManager.getAchievementStats();
+
   achievementService.evaluate({
     bestHps: pb?.hps ?? result.hps,
+    lastHps: result.hps,
     lastHits: result.hits,
+    lastMisses: result.misses,
     lastAccuracy: result.accuracy,
     lastAvgMs: result.avgTimeMs,
-    sessionCount: recent.length,
+    sessionCount: agg.sessionCount,
+    totalHits: agg.totalHits,
+    maxHits: Math.max(agg.maxHits, result.hits),
+    bestAccuracy: Math.max(agg.bestAccuracy, result.accuracy),
+    bestAvgMs: agg.bestAvgMs,
+    sessions95: agg.sessions95,
+    accuracyStreak90: agg.accuracyStreak90,
+    isNewBest,
   });
 
   bus.emit('session:complete', { result, entry });
@@ -95,7 +106,7 @@ function startGame() {
 }
 
 function resetBest() {
-  if (confirm('Personal best sıfırlansın mı?')) {
+  if (confirm('Reset your personal best?')) {
     statsManager.resetPersonalBest();
     ui.refreshStaticPanels();
   }

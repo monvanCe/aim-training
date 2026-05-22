@@ -13,7 +13,11 @@ export class ScoreCalculator {
     this.hits = 0;
     this.misses = 0;
     this.totalReactionMs = 0;
-    this._lastHitTime = performance.now();
+    this._lastHitTime = null;
+  }
+
+  startTiming(now = performance.now()) {
+    this._lastHitTime = now;
   }
 
   recordHit(now = performance.now()) {

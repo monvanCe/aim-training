@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,7 +30,7 @@
                 <span class="hud-stat__label">ACC</span>
                 <span class="hud-stat__value" id="hud-acc">100 %</span>
               </div>
-              <button type="button" class="btn-stop" id="btn-stop" title="Durdur" aria-label="Durdur">
+              <button type="button" class="btn-stop" id="btn-stop" title="Stop" aria-label="Stop">
                 <span class="btn-stop__icon"></span>
               </button>
             </div>
@@ -47,7 +47,7 @@
                 <span class="card-header__badge">Last 20</span>
               </div>
               <div class="recent-list" id="recent-list">
-                <p class="empty-state">Henüz test yok</p>
+                <p class="empty-state">No tests yet</p>
               </div>
             </div>
 
@@ -55,15 +55,16 @@
               <div class="card-header">
                 <span class="card-header__icon">🏆</span>
                 <h2>Achievements</h2>
-                <span class="card-header__badge" id="achievement-count">0/23</span>
+                <span class="card-header__badge" id="achievement-count">0/0</span>
               </div>
               <div class="tabs" id="achievement-tabs" role="tablist">
-                <button type="button" class="tab tab--active" data-mode="flick" role="tab">Flick</button>
-                <button type="button" class="tab" data-mode="grid" role="tab">Grid</button>
-                <button type="button" class="tab" data-mode="spider" role="tab">Spider</button>
-                <button type="button" class="tab" data-mode="track" role="tab">Track</button>
+                <button type="button" class="tab tab--active" data-category="rank" role="tab">Rank</button>
+                <button type="button" class="tab" data-category="speed" role="tab">Speed</button>
+                <button type="button" class="tab" data-category="accuracy" role="tab">Accuracy</button>
+                <button type="button" class="tab" data-category="reaction" role="tab">Reaction</button>
+                <button type="button" class="tab" data-category="progress" role="tab">Progress</button>
               </div>
-              <div class="achievement-grid" id="achievement-grid"></div>
+              <div class="achievement-list" id="achievement-grid"></div>
             </div>
           </div>
         </div>
@@ -165,15 +166,16 @@
             <div class="card-header">
               <span class="card-header__icon">🏆</span>
               <h2>Achievements</h2>
-              <span class="card-header__badge" id="achievement-count-results">0/23</span>
+              <span class="card-header__badge" id="achievement-count-results">0/0</span>
             </div>
             <div class="tabs" id="achievement-tabs-results" role="tablist">
-              <button type="button" class="tab tab--active" data-mode="flick">Flick</button>
-              <button type="button" class="tab" data-mode="grid">Grid</button>
-              <button type="button" class="tab" data-mode="spider">Spider</button>
-              <button type="button" class="tab" data-mode="track">Track</button>
+              <button type="button" class="tab tab--active" data-category="rank">Rank</button>
+              <button type="button" class="tab" data-category="speed">Speed</button>
+              <button type="button" class="tab" data-category="accuracy">Accuracy</button>
+              <button type="button" class="tab" data-category="reaction">Reaction</button>
+              <button type="button" class="tab" data-category="progress">Progress</button>
             </div>
-            <div class="achievement-grid" id="achievement-grid-results"></div>
+            <div class="achievement-list" id="achievement-grid-results"></div>
           </div>
         </div>
       </div>

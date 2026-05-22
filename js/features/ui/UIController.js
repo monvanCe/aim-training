@@ -60,8 +60,11 @@ export class UIController {
       gridEl: dom.achievementGridResults,
       countEl: dom.achievementCountResults,
       achievementService,
-      onModeChange: (mode) => this.achievementsGame.setActiveMode(mode),
+      onCategoryChange: (category) => this.achievementsGame.setActiveCategory(category),
     });
+
+    this.achievementsGame.bindTabs();
+    this.achievementsResults.bindTabs();
 
     this.results = new ResultsView({
       score: dom.resultScore,

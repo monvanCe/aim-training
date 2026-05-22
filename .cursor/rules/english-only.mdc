@@ -1,0 +1,15 @@
+---
+description: All user-facing text and copy must be English
+alwaysApply: true
+---
+
+# English-only UI and copy
+
+This project uses **English only** for all user-facing content.
+
+- UI labels, buttons, tooltips, `aria-label`, `title`, confirm dialogs, empty states
+- Achievement names, descriptions, and category tab labels
+- HTML `lang` attribute must be `en`
+- Do not add Turkish (or other non-English) strings in code, HTML, or comments meant for users
+
+Code comments for developers may be English; prefer clear English over Turkish.

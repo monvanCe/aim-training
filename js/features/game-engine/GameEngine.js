@@ -19,6 +19,7 @@ export class GameEngine {
   #height = 0;
   #startTime = 0;
   #elapsed = 0;
+  #timerStarted = false;
   #duration = 30;
   #rafId = null;
   #onTick = null;
@@ -87,7 +88,7 @@ export class GameEngine {
     this.#targets.initialize(current, next);
     this.#scores.reset();
     this.#elapsed = 0;
-    this.#startTime = performance.now();
+    this.#timerStarted = false;
     this.#state = STATE.RUNNING;
     this.#onStateChange(this.#state);
     this.#loop();
@@ -106,7 +107,14 @@ export class GameEngine {
     if (this.#state !== STATE.RUNNING) return;
 
     if (this.#targets.hitTest(x, y)) {
-      this.#scores.recordHit();
+      const now = performance.now();
+      if (!this.#timerStarted) {
+        this.#timerStarted = true;
+        this.#startTime = now;
+        this.#scores.startTiming(now);
+      } else {
+        this.#scores.recordHit(now);
+      }
       const nextPos = this.#mode.spawnNext(
         this.#width,
         this.#height,
@@ -114,17 +122,19 @@ export class GameEngine {
         this.#targets.current
       );
       this.#targets.advance(nextPos);
-    } else {
+    } else if (this.#timerStarted) {
       this.#scores.recordMiss();
     }
     this.#emitTick();
   }
 
   #loop() {
-    const now = performance.now();
-    this.#elapsed = (now - this.#startTime) / 1000;
+    if (this.#timerStarted) {
+      const now = performance.now();
+      this.#elapsed = (now - this.#startTime) / 1000;
+    }
 
-    if (this.#elapsed >= this.#duration) {
+    if (this.#timerStarted && this.#elapsed >= this.#duration) {
       this.#finish();
       return;
     }
