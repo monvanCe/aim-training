@@ -39,8 +39,9 @@ export class CanvasRenderer {
   /**
    * @param {{ current: object|null, next: object|null }} targets
    * @param {number} radius
+   * @param {{ mouse?: { x: number, y: number } }} [overlay]
    */
-  render(targets, radius) {
+  render(targets, radius, overlay) {
     const { width, height } = this.logicalSize;
     const ctx = this.#ctx;
 
@@ -53,6 +54,35 @@ export class CanvasRenderer {
     if (targets.current) {
       this.#drawer.draw(ctx, targets.current, 'current', radius);
     }
+
+    if (overlay) {
+      this.#drawReplayOverlay(ctx, overlay);
+    }
+  }
+
+  /**
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {{ mouse?: { x: number, y: number } }} overlay
+   */
+  #drawReplayOverlay(ctx, overlay) {
+    const mouse = overlay.mouse;
+    if (!mouse) return;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(250, 250, 250, 0.9)';
+    ctx.lineWidth = 1.5;
+    const size = 8;
+    ctx.beginPath();
+    ctx.moveTo(mouse.x - size, mouse.y);
+    ctx.lineTo(mouse.x + size, mouse.y);
+    ctx.moveTo(mouse.x, mouse.y - size);
+    ctx.lineTo(mouse.x, mouse.y + size);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(mouse.x, mouse.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(250, 250, 250, 0.95)';
+    ctx.fill();
+    ctx.restore();
   }
 
   clear() {
@@ -89,9 +119,11 @@ export class CanvasRenderer {
     if (rect.width === 0 || rect.height === 0) {
       return { x: 0, y: 0 };
     }
+    const x = ((clientX - rect.left) / rect.width) * this.#logicalWidth;
+    const y = ((clientY - rect.top) / rect.height) * this.#logicalHeight;
     return {
-      x: ((clientX - rect.left) / rect.width) * this.#logicalWidth,
-      y: ((clientY - rect.top) / rect.height) * this.#logicalHeight,
+      x: Math.max(0, Math.min(this.#logicalWidth, x)),
+      y: Math.max(0, Math.min(this.#logicalHeight, y)),
     };
   }
 }

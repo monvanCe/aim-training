@@ -31,6 +31,23 @@
     </div>
   </div>
 
+  <div id="modal-replay" class="modal-overlay" hidden>
+    <div class="modal card modal--replay" role="dialog" aria-labelledby="modal-replay-title" aria-modal="true">
+      <div class="modal__header">
+        <h2 id="modal-replay-title" class="modal__title">Session Replay</h2>
+        <button type="button" class="modal__close" id="btn-close-replay" aria-label="Close">&times;</button>
+      </div>
+      <p id="replay-meta" class="replay-meta"></p>
+      <div class="replay-canvas-wrap">
+        <canvas id="replay-canvas" width="640" height="400"></canvas>
+      </div>
+      <div class="replay-controls">
+        <button type="button" class="btn-primary replay-controls__play" id="btn-replay-play" aria-label="Play replay">Play</button>
+        <span id="replay-time" class="replay-controls__time">0.0s / 0.0s</span>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-leaderboard" class="modal-overlay" hidden>
     <div class="modal card modal--wide" role="dialog" aria-labelledby="modal-leaderboard-title" aria-modal="true">
       <div class="modal__header">

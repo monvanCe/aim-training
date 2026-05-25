@@ -85,8 +85,12 @@ export class UIController {
     const hps = pb?.hps ?? null;
     this.sidebar.update(hps);
     this.sidebarResults.update(hps);
-    this.recentGame.render(this._stats.getRecentTests());
-    this.recentResults.render(this._stats.getRecentTests());
+    const tests = this._stats.getRecentTests();
+    const replayIds = this._stats.getReplayIds();
+    this.recentGame.setReplayIds(replayIds);
+    this.recentResults.setReplayIds(replayIds);
+    this.recentGame.render(tests);
+    this.recentResults.render(tests);
 
     const unlocked = this._achievements.getUnlockedIds();
     this.achievementsGame.setUnlocked(unlocked);

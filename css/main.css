@@ -84,6 +84,47 @@ body {
   max-width: 420px;
 }
 
+.modal--replay {
+  max-width: 680px;
+}
+
+.replay-meta {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin: 0 0 12px;
+}
+
+.replay-canvas-wrap {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: #0f172a;
+  margin-bottom: 12px;
+  max-width: 100%;
+}
+
+.replay-canvas-wrap canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.replay-controls__play {
+  min-width: 100px;
+}
+
+.replay-controls__time {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
 .modal__header {
   display: flex;
   align-items: center;
@@ -280,6 +321,7 @@ body {
 .game-canvas-wrap {
   overflow: hidden;
   border-radius: var(--radius-sm);
+  touch-action: none;
 }
 
 #game-canvas {
@@ -540,6 +582,26 @@ body {
   margin-left: auto;
   font-size: 0.75rem;
   color: var(--text-dim);
+}
+
+.recent-item__replay {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--accent-purple);
+  font-size: 0.7rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+
+.recent-item__replay:hover {
+  background: rgba(139, 92, 246, 0.35);
+  color: #fff;
 }
 
 .recent-item__stats {

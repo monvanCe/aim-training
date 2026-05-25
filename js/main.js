@@ -8,6 +8,8 @@ import { UIController } from './features/ui/UIController.js';
 import { PlayerIdentityService } from './features/leaderboard/PlayerIdentityService.js';
 import { LeaderboardService } from './features/leaderboard/LeaderboardService.js';
 import { LeaderboardView } from './features/ui/LeaderboardView.js';
+import { ReplayView } from './features/ui/ReplayView.js';
+import { SessionRecorder } from './features/replay/SessionRecorder.js';
 
 const bus = new EventBus();
 const statsManager = new StatsManager();
@@ -83,9 +85,21 @@ const ui = new UIController(
   achievementService
 );
 
+const replayView = new ReplayView({
+  modalReplay: document.getElementById('modal-replay'),
+  replayCanvas: document.getElementById('replay-canvas'),
+  replayTitle: document.getElementById('modal-replay-title'),
+  replayMeta: document.getElementById('replay-meta'),
+  replayTime: document.getElementById('replay-time'),
+  btnReplayPlay: document.getElementById('btn-replay-play'),
+  btnCloseReplay: document.getElementById('btn-close-replay'),
+});
+
+const sessionRecorder = new SessionRecorder();
 const flickMode = new FlickMode();
 
 const engine = new GameEngine(flickMode, {
+  recorder: sessionRecorder,
   onTick: (tick) => {
     ui.hud.update(tick);
     renderer.render(tick.targets, engine.targets.radius);
@@ -108,6 +122,10 @@ function setupCanvas() {
 function handleSessionEnd() {
   const result = engine.getResults();
   const { entry, isNewBest } = statsManager.saveSession(result);
+  const recording = engine.getRecording();
+  if (recording) {
+    statsManager.saveReplay(entry.id, recording);
+  }
 
   const pb = statsManager.getPersonalBest();
   const recent = statsManager.getRecentTests();
@@ -152,12 +170,46 @@ function resetBest() {
   }
 }
 
+const canvasWrap = canvas.parentElement;
+
+canvasWrap.addEventListener('pointermove', (e) => {
+  if (engine.state !== 'running' || !engine.timerStarted) return;
+  const { x, y } = renderer.toCanvasCoords(e.clientX, e.clientY);
+  sessionRecorder.maybeRecordMouse(x, y);
+});
+
 canvas.addEventListener('pointerdown', (e) => {
   if (e.button !== 0) return;
   e.preventDefault();
   const { x, y } = renderer.toCanvasCoords(e.clientX, e.clientY);
   engine.handleClick(x, y);
+  if (engine.timerStarted) {
+    canvas.setPointerCapture(e.pointerId);
+  }
 });
+
+canvas.addEventListener('pointerup', (e) => {
+  if (canvas.hasPointerCapture(e.pointerId)) {
+    canvas.releasePointerCapture(e.pointerId);
+  }
+});
+
+canvas.addEventListener('pointercancel', (e) => {
+  if (canvas.hasPointerCapture(e.pointerId)) {
+    canvas.releasePointerCapture(e.pointerId);
+  }
+});
+
+function openReplay(sessionId) {
+  const tests = statsManager.getRecentTests();
+  const entry = tests.find((t) => t.id === sessionId);
+  const replayData = statsManager.getReplay(sessionId);
+  if (!entry || !replayData) return;
+  replayView.open(entry, replayData);
+}
+
+ui.recentGame.setReplayHandler(openReplay);
+ui.recentResults.setReplayHandler(openReplay);
 
 document.getElementById('btn-stop').addEventListener('click', () => engine.stop());
 document.getElementById('btn-retry').addEventListener('click', startGame);

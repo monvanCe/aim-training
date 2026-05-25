@@ -24,10 +24,11 @@ export class GameEngine {
   #rafId = null;
   #onTick = null;
   #onStateChange = null;
+  #recorder = null;
 
   /**
    * @param {import('./IGameMode.js').IGameMode} mode
-   * @param {{ onTick?: Function, onStateChange?: Function }} callbacks
+   * @param {{ onTick?: Function, onStateChange?: Function, recorder?: import('../replay/SessionRecorder.js').SessionRecorder }} callbacks
    */
   constructor(mode, callbacks = {}) {
     this.#mode = mode;
@@ -36,6 +37,7 @@ export class GameEngine {
     this.#duration = mode.durationSeconds;
     this.#onTick = callbacks.onTick ?? (() => {});
     this.#onStateChange = callbacks.onStateChange ?? (() => {});
+    this.#recorder = callbacks.recorder ?? null;
   }
 
   get state() {
@@ -106,12 +108,16 @@ export class GameEngine {
   handleClick(x, y) {
     if (this.#state !== STATE.RUNNING) return;
 
-    if (this.#targets.hitTest(x, y)) {
+    const hit = this.#targets.hitTest(x, y);
+
+    if (hit) {
       const now = performance.now();
       if (!this.#timerStarted) {
         this.#timerStarted = true;
         this.#startTime = now;
         this.#scores.startTiming(now);
+        this.#recorder?.start(this.#width, this.#height);
+        this.#recorder?.recordTargets(this.#targets.current, this.#targets.next);
       } else {
         this.#scores.recordHit(now);
       }
@@ -122,6 +128,7 @@ export class GameEngine {
         this.#targets.current
       );
       this.#targets.advance(nextPos);
+      this.#recorder?.recordTargets(this.#targets.current, this.#targets.next);
     } else if (this.#timerStarted) {
       this.#scores.recordMiss();
     }
@@ -149,9 +156,20 @@ export class GameEngine {
       this.#rafId = null;
     }
     this.#elapsed = Math.min(this.#elapsed, this.#duration);
+    this.#recorder?.stop();
     this.#state = STATE.FINISHED;
     this.#onStateChange(this.#state);
     this.#emitTick();
+  }
+
+  get timerStarted() {
+    return this.#timerStarted;
+  }
+
+  getRecording() {
+    if (!this.#recorder || !this.#timerStarted) return null;
+    const durationMs = Math.round(this.#elapsed * 1000);
+    return this.#recorder.export(this.#targets.radius, durationMs);
   }
 
   #emitTick() {
@@ -191,6 +209,7 @@ export class GameEngine {
   resetToIdle() {
     if (this.#rafId) cancelAnimationFrame(this.#rafId);
     this.#rafId = null;
+    this.#recorder?.stop();
     this.#state = STATE.IDLE;
     this.#targets.reset();
     this.#onStateChange(this.#state);

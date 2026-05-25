@@ -4,6 +4,7 @@ import { RankService } from './RankService.js';
 const KEYS = {
   personalBest: 'aimtrainer_pb_flick',
   recentTests: 'aimtrainer_recent',
+  replays: 'aimtrainer_replays',
   totalSessions: 'aimtrainer_total_sessions',
   totalHits: 'aimtrainer_total_hits',
 };
@@ -48,7 +49,9 @@ export class StatsManager {
 
     const recent = this.#storage.get(KEYS.recentTests, []);
     recent.unshift(entry);
-    this.#storage.set(KEYS.recentTests, recent.slice(0, MAX_RECENT));
+    const trimmed = recent.slice(0, MAX_RECENT);
+    this.#storage.set(KEYS.recentTests, trimmed);
+    this.#pruneReplays(trimmed.map((e) => e.id));
 
     const totalSessions = this.#storage.get(KEYS.totalSessions, 0) + 1;
     this.#storage.set(KEYS.totalSessions, totalSessions);
@@ -72,6 +75,45 @@ export class StatsManager {
 
   getRecentTests() {
     return this.#storage.get(KEYS.recentTests, []);
+  }
+
+  /**
+   * @param {number} sessionId
+   * @param {object} replayData
+   */
+  saveReplay(sessionId, replayData) {
+    if (!replayData?.events?.length) return;
+    const replays = this.#storage.get(KEYS.replays, {});
+    replays[String(sessionId)] = replayData;
+    this.#storage.set(KEYS.replays, replays);
+  }
+
+  /**
+   * @param {number} sessionId
+   * @returns {object|null}
+   */
+  getReplay(sessionId) {
+    const replays = this.#storage.get(KEYS.replays, {});
+    return replays[String(sessionId)] ?? null;
+  }
+
+  getReplayIds() {
+    return new Set(
+      Object.keys(this.#storage.get(KEYS.replays, {})).map((id) => Number(id))
+    );
+  }
+
+  #pruneReplays(keepIds) {
+    const keep = new Set(keepIds.map(String));
+    const replays = this.#storage.get(KEYS.replays, {});
+    let changed = false;
+    for (const id of Object.keys(replays)) {
+      if (!keep.has(id)) {
+        delete replays[id];
+        changed = true;
+      }
+    }
+    if (changed) this.#storage.set(KEYS.replays, replays);
   }
 
   /**
