@@ -5,6 +5,10 @@ export const RANKS = [
   { id: 'skilled', name: 'Skilled', threshold: 2 },
   { id: 'expert', name: 'Expert', threshold: 2.5 },
   { id: 'master', name: 'Master', threshold: 3 },
+  { id: 'grandmaster', name: 'Grandmaster', threshold: 3.5 },
+  { id: 'legend', name: 'Legend', threshold: 4 },
+  { id: 'mythic', name: 'Mythic', threshold: 4.5 },
+  { id: 'godlike', name: 'Godlike', threshold: 5 },
 ];
 
 /**
