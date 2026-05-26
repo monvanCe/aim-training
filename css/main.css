@@ -15,12 +15,23 @@ body {
   position: relative;
 }
 
-/* Leaderboard (fixed top-right) */
-.btn-leaderboard {
+/* Leaderboard + score sync (fixed top-right) */
+.top-right-actions {
   position: fixed;
   top: 16px;
   right: 16px;
   z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.btn-leaderboard[hidden] {
+  display: none !important;
+}
+
+.btn-leaderboard {
   width: 44px;
   height: 44px;
   display: flex;
@@ -44,6 +55,35 @@ body {
   line-height: 1;
 }
 
+.btn-leaderboard--status {
+  cursor: default;
+  pointer-events: none;
+}
+
+.btn-leaderboard--status:hover {
+  background: var(--bg-card);
+  transform: none;
+}
+
+.btn-leaderboard__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+}
+
+.cloud-status__spinner:not([hidden]) {
+  animation: boot-spin 0.75s linear infinite;
+}
+
+.cloud-status__tick {
+  font-size: 1.35rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+
 .toast-welcome {
   position: fixed;
   top: 68px;
@@ -57,6 +97,18 @@ body {
   font-size: 0.82rem;
   color: var(--accent-green);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes boot-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+body.is-game-locked .app,
+body.is-game-locked .top-right-actions {
+  pointer-events: none;
+  user-select: none;
 }
 
 .modal-overlay {
@@ -268,11 +320,6 @@ body {
   align-items: start;
 }
 
-.layout--results {
-  grid-template-columns: 1fr 280px;
-  grid-template-rows: auto auto;
-}
-
 .game-column {
   display: flex;
   flex-direction: column;
@@ -309,13 +356,32 @@ body {
   color: var(--text-dim);
 }
 
-/* Game canvas */
-.card--game {
-  padding: 12px 12px 0;
+/* Session card (play + results) */
+.card--session {
+  padding: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.session-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.session-body {
+  min-height: 0;
+}
+
+.session-panel--results {
+  padding: 8px 4px 4px;
+}
+
+.session-panel[hidden] {
+  display: none !important;
 }
 
 .game-canvas-wrap {
@@ -329,12 +395,6 @@ body {
   cursor: crosshair;
   background: #0d1117;
   touch-action: none;
-}
-
-.hud {
-  display: flex;
-  gap: 8px;
-  align-items: center;
 }
 
 .hud-stat {
@@ -358,29 +418,55 @@ body {
   font-weight: 600;
 }
 
-.btn-stop {
-  margin-left: auto;
-  width: 36px;
-  height: 36px;
-  background: var(--accent-red);
+.session-action {
+  box-sizing: border-box;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 1;
+  align-self: stretch;
+  justify-self: end;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.15s;
+  flex-shrink: 0;
+  transition: opacity 0.15s, transform 0.1s, background 0.15s;
 }
 
-.btn-stop:hover {
+.session-action[hidden] {
+  display: none !important;
+}
+
+.session-action--stop {
+  background: var(--accent-red);
+}
+
+.session-action--stop:hover {
   opacity: 0.85;
 }
 
-.btn-stop__icon {
+.session-action--retry {
+  background: var(--accent-green);
+}
+
+.session-action--retry:hover {
+  background: #0ea572;
+  transform: scale(1.04);
+}
+
+.session-action__icon--stop {
   width: 12px;
   height: 12px;
   background: #fff;
   border-radius: 2px;
+}
+
+.session-action__icon--retry {
+  font-size: 0.95rem;
+  line-height: 1;
+  color: #fff;
 }
 
 /* Sidebar */
@@ -500,10 +586,6 @@ body {
   grid-template-columns: 1fr 1.2fr;
   gap: 16px;
   align-items: stretch;
-}
-
-.bottom-row--results {
-  grid-column: 1 / -1;
 }
 
 .card--recent,
@@ -710,10 +792,6 @@ body {
 }
 
 /* Results */
-.results-main {
-  padding: 28px 24px;
-}
-
 .results-label {
   font-size: 0.7rem;
   letter-spacing: 0.12em;
@@ -815,10 +893,21 @@ body {
 }
 
 @media (max-width: 900px) {
-  .layout,
-  .layout--results {
+  .layout {
     grid-template-columns: 1fr;
   }
+
+  .session-top {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'time score'
+      'acc action';
+  }
+
+  .session-top .hud-stat:nth-child(1) { grid-area: time; }
+  .session-top .hud-stat:nth-child(2) { grid-area: score; }
+  .session-top .hud-stat:nth-child(3) { grid-area: acc; }
+  .session-top .session-action { grid-area: action; justify-self: end; }
 
   .bottom-row {
     grid-template-columns: 1fr;

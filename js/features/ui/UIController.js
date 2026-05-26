@@ -16,8 +16,10 @@ export class UIController {
   constructor(dom, statsManager, achievementService) {
     const ranks = statsManager.rankService;
 
-    this.gameView = dom.gameView;
-    this.resultsView = dom.resultsView;
+    this.sessionPlay = dom.sessionPlay;
+    this.sessionResults = dom.sessionResults;
+    this.btnStop = dom.btnStop;
+    this.btnRetry = dom.btnRetry;
 
     this.hud = new GameHUD({
       time: dom.hudTime,
@@ -35,36 +37,16 @@ export class UIController {
       ranks
     );
 
-    this.sidebarResults = new SidebarView(
-      {
-        score: dom.resultPbScore,
-        rankName: dom.resultPbRank,
-        progressBar: dom.resultPbProgressBar,
-        rankList: dom.resultRankList,
-      },
-      ranks
-    );
+    this.recent = new RecentTestsView(dom.recentList);
 
-    this.recentGame = new RecentTestsView(dom.recentList);
-    this.recentResults = new RecentTestsView(dom.recentListResults);
-
-    this.achievementsGame = new AchievementsView({
+    this.achievements = new AchievementsView({
       tabsEl: dom.achievementTabs,
       gridEl: dom.achievementGrid,
       countEl: dom.achievementCount,
       achievementService,
     });
 
-    this.achievementsResults = new AchievementsView({
-      tabsEl: dom.achievementTabsResults,
-      gridEl: dom.achievementGridResults,
-      countEl: dom.achievementCountResults,
-      achievementService,
-      onCategoryChange: (category) => this.achievementsGame.setActiveCategory(category),
-    });
-
-    this.achievementsGame.bindTabs();
-    this.achievementsResults.bindTabs();
+    this.achievements.bindTabs();
 
     this.results = new ResultsView({
       score: dom.resultScore,
@@ -84,35 +66,37 @@ export class UIController {
     const pb = this._stats.getPersonalBest();
     const hps = pb?.hps ?? null;
     this.sidebar.update(hps);
-    this.sidebarResults.update(hps);
     const tests = this._stats.getRecentTests();
     const replayIds = this._stats.getReplayIds();
-    this.recentGame.setReplayIds(replayIds);
-    this.recentResults.setReplayIds(replayIds);
-    this.recentGame.render(tests);
-    this.recentResults.render(tests);
+    this.recent.setReplayIds(replayIds);
+    this.recent.render(tests);
 
     const unlocked = this._achievements.getUnlockedIds();
-    this.achievementsGame.setUnlocked(unlocked);
-    this.achievementsResults.setUnlocked(unlocked);
+    this.achievements.setUnlocked(unlocked);
   }
 
   showGame() {
-    this.gameView.classList.add('view--active');
-    this.gameView.classList.remove('view--hidden');
-    this.resultsView.classList.remove('view--active');
-    this.resultsView.classList.add('view--hidden');
+    this.sessionPlay.hidden = false;
+    this.sessionResults.hidden = true;
+    this.btnStop.hidden = false;
+    this.btnRetry.hidden = true;
   }
 
+  /**
+   * @param {object} result
+   */
   showResults(result) {
     this.results.show(result, this._ranks);
-    const pb = this._stats.getPersonalBest();
-    this.sidebarResults.update(pb?.hps ?? result.hps);
+    this.hud.showSessionResult(result);
 
-    this.gameView.classList.remove('view--active');
-    this.gameView.classList.add('view--hidden');
-    this.resultsView.classList.add('view--active');
-    this.resultsView.classList.remove('view--hidden');
+    const pb = this._stats.getPersonalBest();
+    this.sidebar.update(pb?.hps ?? result.hps);
+
+    this.sessionPlay.hidden = true;
+    this.sessionResults.hidden = false;
+    this.btnStop.hidden = true;
+    this.btnRetry.hidden = false;
+
     this.refreshStaticPanels();
   }
 }

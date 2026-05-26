@@ -2,6 +2,7 @@ import FingerprintJS from '../../vendor/fp.esm.min.js';
 import { KvdbClient } from '../../core/KvdbClient.js';
 
 const PLAYER_PREFIX = 'player:';
+const RETRY_MS = 1000;
 
 /**
  * Resolves visitorId via FingerprintJS and maps it to a username in KVdb.
@@ -46,9 +47,20 @@ export class PlayerIdentityService {
       updatedAt: new Date().toISOString(),
     };
 
-    await this.#kvdb.setJson(this.playerKey(), profile);
+    await this.#savePlayerRecord(profile);
     this.#profile = profile;
     return profile;
+  }
+
+  /**
+   * @param {number} bestHps
+   */
+  shouldSyncBestScore(bestHps) {
+    if (!this.#profile || !this.#visitorId) return false;
+    const score = Number(bestHps);
+    const stored = Number(this.#profile.bestHps ?? 0);
+    if (!Number.isFinite(score)) return false;
+    return score > stored;
   }
 
   /**
@@ -57,15 +69,18 @@ export class PlayerIdentityService {
   async updateBestScore(bestHps) {
     if (!this.#profile || !this.#visitorId) return null;
 
-    if (bestHps <= (this.#profile.bestHps ?? 0)) return this.#profile;
+    const score = Number(bestHps);
+    if (!Number.isFinite(score) || score <= Number(this.#profile.bestHps ?? 0)) {
+      return this.#profile;
+    }
 
     const profile = {
       ...this.#profile,
-      bestHps,
+      bestHps: score,
       updatedAt: new Date().toISOString(),
     };
 
-    await this.#kvdb.setJson(this.playerKey(), profile);
+    await this.#savePlayerRecord(profile);
     this.#profile = profile;
     return profile;
   }
@@ -75,7 +90,7 @@ export class PlayerIdentityService {
     const { visitorId } = await agent.get();
     this.#visitorId = visitorId;
 
-    const raw = await this.#kvdb.get(this.playerKey(visitorId));
+    const raw = await this.#fetchPlayerRecord(visitorId);
     if (!raw) {
       return { visitorId, profile: null, isNew: true };
     }
@@ -88,5 +103,26 @@ export class PlayerIdentityService {
     }
 
     return { visitorId, profile: this.#profile, isNew: false };
+  }
+
+  /**
+   * @param {string} visitorId
+   * @returns {Promise<string|null>}
+   */
+  async #fetchPlayerRecord(visitorId) {
+    while (true) {
+      try {
+        return await this.#kvdb.get(this.playerKey(visitorId));
+      } catch {
+        await new Promise((r) => setTimeout(r, RETRY_MS));
+      }
+    }
+  }
+
+  /**
+   * @param {object} profile
+   */
+  async #savePlayerRecord(profile) {
+    await this.#kvdb.setJson(this.playerKey(), profile);
   }
 }

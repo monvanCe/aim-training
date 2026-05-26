@@ -150,14 +150,12 @@ export class LeaderboardView {
 
     try {
       if (this._onRegister) await this._onRegister(name);
-      this.hideUsernamePrompt();
     } catch (err) {
       this.usernameError.hidden = false;
       this.usernameError.textContent =
         err?.message?.includes('email') || err?.message?.includes('verified')
           ? 'Cannot save yet — verify your KVdb account email first.'
           : 'Could not save username. Try again.';
-    } finally {
       this.btnSaveUsername.disabled = false;
     }
   }

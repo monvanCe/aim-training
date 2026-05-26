@@ -36,15 +36,54 @@ const leaderboardView = new LeaderboardView(
   playerIdentity
 );
 
-leaderboardView.onRegister(async (username) => {
-  await playerIdentity.register(username);
-});
+const cloudStatus = document.getElementById('cloud-status');
+const cloudSpinner = cloudStatus.querySelector('.cloud-status__spinner');
+const cloudTick = cloudStatus.querySelector('.cloud-status__tick');
+let cloudStatusTimer = null;
 
-playerIdentity.init().then(({ profile, isNew }) => {
-  if (isNew) {
-    leaderboardView.showUsernamePrompt();
-  } else if (profile?.username) {
-    leaderboardView.showWelcome(profile.username);
+/** @param {'idle' | 'loading' | 'success'} state */
+function setCloudStatus(state) {
+  clearTimeout(cloudStatusTimer);
+  if (state === 'idle') {
+    cloudStatus.hidden = true;
+    cloudSpinner.hidden = true;
+    cloudTick.hidden = true;
+    cloudStatus.removeAttribute('aria-busy');
+    cloudStatus.removeAttribute('aria-label');
+    return;
+  }
+  cloudStatus.hidden = false;
+  cloudSpinner.hidden = state !== 'loading';
+  cloudTick.hidden = state !== 'success';
+  cloudStatus.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
+  cloudStatus.setAttribute(
+    'aria-label',
+    state === 'loading' ? 'Syncing with server' : 'Saved'
+  );
+}
+
+function showCloudSuccessThenHide(ms = 2000) {
+  setCloudStatus('success');
+  cloudStatusTimer = setTimeout(() => setCloudStatus('idle'), ms);
+}
+
+function setGameLocked(locked) {
+  document.body.classList.toggle('is-game-locked', locked);
+}
+
+let resolveRegistration = null;
+
+leaderboardView.onRegister(async (username) => {
+  setCloudStatus('loading');
+  try {
+    await playerIdentity.register(username);
+    showCloudSuccessThenHide();
+    leaderboardView.hideUsernamePrompt();
+    resolveRegistration?.();
+    resolveRegistration = null;
+  } catch {
+    setCloudStatus('idle');
+    throw new Error('Could not save username');
   }
 });
 
@@ -53,8 +92,10 @@ const renderer = new CanvasRenderer(canvas);
 
 const ui = new UIController(
   {
-    gameView: document.getElementById('game-view'),
-    resultsView: document.getElementById('results-view'),
+    sessionPlay: document.getElementById('session-play'),
+    sessionResults: document.getElementById('session-results'),
+    btnStop: document.getElementById('btn-stop'),
+    btnRetry: document.getElementById('btn-retry'),
     hudTime: document.getElementById('hud-time'),
     hudScore: document.getElementById('hud-score'),
     hudAcc: document.getElementById('hud-acc'),
@@ -72,14 +113,6 @@ const ui = new UIController(
     resultAvg: document.getElementById('result-avg'),
     resultHits: document.getElementById('result-hits'),
     resultDuration: document.getElementById('result-duration'),
-    resultPbScore: document.getElementById('result-pb-score'),
-    resultPbRank: document.getElementById('result-pb-rank'),
-    resultPbProgressBar: document.getElementById('result-pb-progress-bar'),
-    resultRankList: document.getElementById('result-rank-list'),
-    recentListResults: document.getElementById('recent-list-results'),
-    achievementTabsResults: document.getElementById('achievement-tabs-results'),
-    achievementGridResults: document.getElementById('achievement-grid-results'),
-    achievementCountResults: document.getElementById('achievement-count-results'),
   },
   statsManager,
   achievementService
@@ -106,7 +139,7 @@ const engine = new GameEngine(flickMode, {
   },
   onStateChange: (state) => {
     if (state === 'finished') {
-      handleSessionEnd();
+      void handleSessionEnd();
     }
   },
 });
@@ -119,7 +152,7 @@ function setupCanvas() {
   engine.setup(size.width, size.height);
 }
 
-function handleSessionEnd() {
+async function handleSessionEnd() {
   const result = engine.getResults();
   const { entry, isNewBest } = statsManager.saveSession(result);
   const recording = engine.getRecording();
@@ -128,7 +161,6 @@ function handleSessionEnd() {
   }
 
   const pb = statsManager.getPersonalBest();
-  const recent = statsManager.getRecentTests();
 
   const agg = statsManager.getAchievementStats();
 
@@ -149,12 +181,18 @@ function handleSessionEnd() {
     isNewBest,
   });
 
-  if (pb?.hps != null) {
-    playerIdentity.updateBestScore(pb.hps).catch(() => {});
-  }
-
   bus.emit('session:complete', { result, entry });
   ui.showResults(result);
+
+  if (isNewBest && playerIdentity.shouldSyncBestScore(result.hps)) {
+    setCloudStatus('loading');
+    try {
+      await playerIdentity.updateBestScore(result.hps);
+      showCloudSuccessThenHide();
+    } catch {
+      setCloudStatus('idle');
+    }
+  }
 }
 
 function startGame() {
@@ -208,19 +246,11 @@ function openReplay(sessionId) {
   replayView.open(entry, replayData);
 }
 
-ui.recentGame.setReplayHandler(openReplay);
-ui.recentResults.setReplayHandler(openReplay);
+ui.recent.setReplayHandler(openReplay);
 
 document.getElementById('btn-stop').addEventListener('click', () => engine.stop());
 document.getElementById('btn-retry').addEventListener('click', startGame);
-document.getElementById('btn-menu').addEventListener('click', () => {
-  engine.resetToIdle();
-  ui.showGame();
-  renderer.clear();
-  setupCanvas();
-});
 document.getElementById('btn-reset-best').addEventListener('click', resetBest);
-document.getElementById('btn-reset-best-results').addEventListener('click', resetBest);
 
 window.addEventListener('resize', () => {
   if (engine.state === 'running') return;
@@ -229,7 +259,32 @@ window.addEventListener('resize', () => {
 });
 
 ui.refreshStaticPanels();
-requestAnimationFrame(() => {
-  setupCanvas();
-  startGame();
-});
+
+async function boot() {
+  setGameLocked(true);
+  setCloudStatus('loading');
+
+  const { profile, isNew } = await playerIdentity.init();
+
+  if (isNew) {
+    setCloudStatus('idle');
+    leaderboardView.showUsernamePrompt();
+    await new Promise((resolve) => {
+      resolveRegistration = resolve;
+    });
+  } else {
+    if (profile?.username) {
+      leaderboardView.showWelcome(profile.username);
+    }
+    showCloudSuccessThenHide();
+  }
+
+  setGameLocked(false);
+
+  requestAnimationFrame(() => {
+    setupCanvas();
+    startGame();
+  });
+}
+
+boot();

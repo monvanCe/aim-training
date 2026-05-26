@@ -18,4 +18,13 @@ export class GameHUD {
     this._el.score.textContent = `${tick.scores.hps.toFixed(1)} /s`;
     this._el.acc.textContent = `${tick.scores.accuracy} %`;
   }
+
+  /**
+   * @param {object} result
+   */
+  showSessionResult(result) {
+    this._el.time.textContent = `${result.duration}s`;
+    this._el.score.textContent = `${result.hps.toFixed(2)} /s`;
+    this._el.acc.textContent = `${result.accuracy} %`;
+  }
 }

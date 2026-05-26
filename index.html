@@ -13,9 +13,15 @@
   <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-  <button type="button" class="btn-leaderboard" id="btn-leaderboard" title="Leaderboard" aria-label="Leaderboard">
-    <span class="btn-leaderboard__icon" aria-hidden="true">🏆</span>
-  </button>
+  <div class="top-right-actions">
+    <button type="button" class="btn-leaderboard" id="btn-leaderboard" title="Leaderboard" aria-label="Leaderboard">
+      <span class="btn-leaderboard__icon" aria-hidden="true">🏆</span>
+    </button>
+    <div id="cloud-status" class="btn-leaderboard btn-leaderboard--status" hidden aria-live="polite">
+      <span class="cloud-status__spinner btn-leaderboard__spinner" hidden aria-hidden="true"></span>
+      <span class="cloud-status__tick" hidden aria-hidden="true">✓</span>
+    </div>
+  </div>
 
   <div id="toast-welcome" class="toast-welcome" hidden>
     <span id="toast-welcome-text"></span>
@@ -61,12 +67,11 @@
   </div>
 
   <div class="app">
-    <!-- Game View -->
-    <section id="game-view" class="view view--active">
+    <section id="app-view" class="view view--active">
       <div class="layout">
         <div class="game-column">
-          <div class="card card--game">
-            <div class="hud">
+          <div class="card card--session">
+            <div class="session-top">
               <div class="hud-stat">
                 <span class="hud-stat__label">TIME</span>
                 <span class="hud-stat__value" id="hud-time">30 s</span>
@@ -79,12 +84,46 @@
                 <span class="hud-stat__label">ACC</span>
                 <span class="hud-stat__value" id="hud-acc">100 %</span>
               </div>
-              <button type="button" class="btn-stop" id="btn-stop" title="Stop" aria-label="Stop">
-                <span class="btn-stop__icon"></span>
+              <button type="button" class="session-action session-action--stop" id="btn-stop" title="Stop" aria-label="Stop">
+                <span class="session-action__icon session-action__icon--stop" aria-hidden="true"></span>
+              </button>
+              <button type="button" class="session-action session-action--retry" id="btn-retry" title="Retry" aria-label="Retry" hidden>
+                <span class="session-action__icon session-action__icon--retry" aria-hidden="true">▶</span>
               </button>
             </div>
-            <div class="game-canvas-wrap">
-              <canvas id="game-canvas" width="640" height="400"></canvas>
+
+            <div class="session-body">
+              <div id="session-play" class="session-panel session-panel--play">
+                <div class="game-canvas-wrap">
+                  <canvas id="game-canvas" width="640" height="400"></canvas>
+                </div>
+              </div>
+
+              <div id="session-results" class="session-panel session-panel--results" hidden>
+                <p class="results-label">MISSION COMPLETE</p>
+                <div class="results-score-block">
+                  <span class="results-score" id="result-score">0.00/s</span>
+                  <span class="results-rank">Rank: <strong id="result-rank">—</strong></span>
+                </div>
+                <div class="stats-grid">
+                  <div class="stat-item stat-item--green">
+                    <span class="stat-item__value" id="result-acc">0%</span>
+                    <span class="stat-item__label">ACCURACY</span>
+                  </div>
+                  <div class="stat-item stat-item--blue">
+                    <span class="stat-item__value" id="result-avg">0ms</span>
+                    <span class="stat-item__label">AVG TIME</span>
+                  </div>
+                  <div class="stat-item stat-item--gold">
+                    <span class="stat-item__value" id="result-hits">0</span>
+                    <span class="stat-item__label">HITS</span>
+                  </div>
+                  <div class="stat-item stat-item--purple">
+                    <span class="stat-item__value" id="result-duration">30s</span>
+                    <span class="stat-item__label">DURATION</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -139,94 +178,6 @@
           </div>
           <button type="button" class="btn-reset" id="btn-reset-best">Reset Best</button>
         </aside>
-      </div>
-    </section>
-
-    <!-- Results View -->
-    <section id="results-view" class="view view--hidden">
-      <div class="layout layout--results">
-        <div class="results-main card">
-          <p class="results-label">MISSION COMPLETE</p>
-          <div class="results-score-block">
-            <span class="results-score" id="result-score">0.00/s</span>
-            <span class="results-rank">Rank: <strong id="result-rank">—</strong></span>
-          </div>
-          <div class="stats-grid">
-            <div class="stat-item stat-item--green">
-              <span class="stat-item__value" id="result-acc">0%</span>
-              <span class="stat-item__label">ACCURACY</span>
-            </div>
-            <div class="stat-item stat-item--blue">
-              <span class="stat-item__value" id="result-avg">0ms</span>
-              <span class="stat-item__label">AVG TIME</span>
-            </div>
-            <div class="stat-item stat-item--gold">
-              <span class="stat-item__value" id="result-hits">0</span>
-              <span class="stat-item__label">HITS</span>
-            </div>
-            <div class="stat-item stat-item--purple">
-              <span class="stat-item__value" id="result-duration">30s</span>
-              <span class="stat-item__label">DURATION</span>
-            </div>
-          </div>
-          <div class="results-actions">
-            <button type="button" class="btn-primary" id="btn-retry">
-              <span class="btn-icon">▶</span> Retry
-            </button>
-            <button type="button" class="btn-secondary" id="btn-menu">
-              <span class="btn-icon">↺</span> Menu
-            </button>
-          </div>
-        </div>
-
-        <aside class="sidebar card sidebar--results">
-          <div class="card-header">
-            <span class="card-header__icon">🏆</span>
-            <h2>Personal Best</h2>
-          </div>
-          <div class="personal-best">
-            <span class="personal-best__score" id="result-pb-score">— /s</span>
-            <span class="personal-best__mode">FLICK MODE</span>
-          </div>
-          <div class="rank-section">
-            <div class="rank-header">
-              <span>⭐ Rank</span>
-              <span class="rank-name" id="result-pb-rank">—</span>
-            </div>
-            <div class="rank-progress">
-              <div class="rank-progress__bar" id="result-pb-progress-bar"></div>
-            </div>
-            <ul class="rank-list" id="result-rank-list"></ul>
-          </div>
-          <button type="button" class="btn-reset" id="btn-reset-best-results">Reset Best</button>
-        </aside>
-
-        <div class="bottom-row bottom-row--results">
-          <div class="card card--recent">
-            <div class="card-header">
-              <span class="card-header__icon">🕐</span>
-              <h2>Recent Tests</h2>
-              <span class="card-header__badge">Last 20</span>
-            </div>
-            <div class="recent-list" id="recent-list-results"></div>
-          </div>
-
-          <div class="card card--achievements">
-            <div class="card-header">
-              <span class="card-header__icon">🏆</span>
-              <h2>Achievements</h2>
-              <span class="card-header__badge" id="achievement-count-results">0/0</span>
-            </div>
-            <div class="tabs" id="achievement-tabs-results" role="tablist">
-              <button type="button" class="tab tab--active" data-category="rank">Rank</button>
-              <button type="button" class="tab" data-category="speed">Speed</button>
-              <button type="button" class="tab" data-category="accuracy">Accuracy</button>
-              <button type="button" class="tab" data-category="reaction">Reaction</button>
-              <button type="button" class="tab" data-category="progress">Progress</button>
-            </div>
-            <div class="achievement-list" id="achievement-grid-results"></div>
-          </div>
-        </div>
       </div>
     </section>
   </div>
